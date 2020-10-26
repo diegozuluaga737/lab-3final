@@ -19,7 +19,7 @@ void AgregarDinero();
 //como usuario
 void modificarsaldo(int retiro);
 bool Comprobarclave(string cl);
-
+bool verificaretiro( int retiro);
 // funciones de ayuda
 void CodificarInfo(string);
 string DecodificarInfo(string);

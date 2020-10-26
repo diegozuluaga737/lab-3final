@@ -88,7 +88,7 @@ void usuario()
 
         cout<<"ingrese el dinero a retirar, debe ser multiplo de 1000"<<endl;
         cin>>retiro;
-        modificarsaldo(retiro);
+         modificarsaldo(retiro);
 
         }
             break;
@@ -108,6 +108,7 @@ void usuario()
 
 void modificarsaldo(int retiro){
     string ce,cl;
+   if ( verificaretiro(retiro)==true) {
     cout<<"ingrese su cedula"<<endl;
     cin>>ce;
 
@@ -116,9 +117,10 @@ void modificarsaldo(int retiro){
             cout<<"ingrese su clave"<<endl;
             cin>>cl;
             if (Comprobarclave(cl)) {
+
                 string usuario,modusuario;
                 int pos=0;
-                usuario=DecodificarInfo("sudo.txt");
+                usuario=DecodificarInfo("sudo.dat");
 
 
                 pos = usuario.find('\n');
@@ -141,33 +143,55 @@ void modificarsaldo(int retiro){
                    saldo = saldo.substr(cedula.size()+clave.size()+2);
 
                    if (ce==cedula and cl==clave){
-                           cout<<"su saldo es de "<<saldo<<" COP"<<endl;
+                            int saldomod = stoi(saldo, nullptr, 10);
 
-                           if(retiro!=0){
+
+
+                           if(retiro!=0 and (saldomod-1000)-retiro>=0){
+                               cout<<"su saldo es de "<<saldo<<" COP"<<endl;
+
                                cout<<"se ha retirado"<<retiro<< " COP"<<endl;
                                 cout<<"la transaccion tendra un costo de 1000 COP"<<endl;
+                                saldomod-=1000;
+                                saldomod-=retiro;
+
+
+                                string mod= to_string(saldomod);
+
+                                cout<< "su nuevo saldo es de "<< mod<< " COP"<<endl;
+
+
+                                modusuario += "\r\n" + cedula + ':' + clave + ':' + mod;
                            }
-                           else {
+                           else if(retiro==0 and saldomod-1000>=0) {
+                               cout<<"su saldo es de "<<saldo<<" COP"<<endl;
+
                                cout<<"la consulta tendra un costo de 1000 COP"<<endl;
+
+                               saldomod-=1000;
+
+                               string mod= to_string(saldomod);
+
+                               cout<< "su nuevo saldo es de "<< mod<< " COP"<<endl;
+
+
+                               modusuario += "\r\n" + cedula + ':' + clave + ':' + mod;
+
                            }
 
-                           int saldomod = stoi(saldo, nullptr, 10);
-                           saldomod-=1000;
-                           saldomod-=retiro;
+                           else {
+                               cout<<"no es posible realizar la accion, no hay suficiente dinero"<<endl;
+                               modusuario += "\r\n" + cedula + ':' + clave + ':' + saldo;
 
-
-                           string mod= to_string(saldomod);
-
-                           cout<< "su nuevo saldo es de "<< mod<< " COP"<<endl;
-
-
-                           modusuario += "\r\n" + cedula + ':' + clave + ':' + mod;
-
+                           }
 
                    }
                    else {
                        modusuario += "\r\n" + cedula + ':' + clave + ':' + saldo;
+
                    }
+
+
 
 
                    pos = usuario.find('\n');
@@ -175,7 +199,9 @@ void modificarsaldo(int retiro){
 
                 }
 
+
                 CodificarInfo(modusuario);
+                cout<<modusuario<<endl;
 
             }
             else {
@@ -197,12 +223,18 @@ void modificarsaldo(int retiro){
 
 
 }
+   else {
+       cout<<"no es posible realizar el retiro, no es divisible entre 1000"<<endl;
+
+   }
+}
+
 
 bool Comprobarclave(string cl)
 {
     string info, clave, cedula;
     int pos = 0;
-    info = DecodificarInfo("sudo.txt");
+    info = DecodificarInfo("sudo.dat");
     pos = info.find('\n');
     info = info.substr(pos+1);
     while(pos!= -1){
@@ -222,8 +254,13 @@ bool Comprobarclave(string cl)
 
 
 
+bool verificaretiro( int retiro){
+    if (retiro%1000==0 )   return true;
 
-
+    else {
+        return false;
+    }
+}
 
 
 
@@ -242,7 +279,7 @@ void CodificarInfo(string info)
     info = Str_to_Binary(info);
     info = codificacion2(info,4);
     info = Binary_to_Str(info);
-    EscribirArchivo("sudo.txt",info);
+    EscribirArchivo("sudo.dat",info);
 
 }
 
@@ -263,7 +300,7 @@ bool ClaveAdmin()
     string clave,clave_admin;
     cin.ignore(10000,'\n');
     cout << "Ingrese la clave de administrador: ";getline(cin,clave);
-    clave_admin = DecodificarInfo("sudo.txt");
+    clave_admin = DecodificarInfo("sudo.dat");
     pos = clave_admin.find('\r');
     clave_admin = clave_admin.substr(0,pos);
     if(clave_admin==clave)
@@ -277,7 +314,7 @@ void VerInfoUsuarios()
 {
     string usuarios;
     int pos = 0;
-    usuarios = DecodificarInfo("sudo.txt");
+    usuarios = DecodificarInfo("sudo.dat");
     pos = usuarios.find('\n');
    usuarios = usuarios.substr(pos+1);
    for(int num=1;pos!=-1;num++){
@@ -304,7 +341,7 @@ void RegistrarUsuario()
     string info,cedula,clave,saldo;
     bool salir = true;
     long long dinero = 0;
-    info = DecodificarInfo("sudo.txt");
+    info = DecodificarInfo("sudo.dat");
     cin.ignore(10000,'\n');
     cout << "Ingrese la cedula del nuevo usuario: ";getline(cin,cedula);
     if(!ComprobarCedula(cedula)){
@@ -338,7 +375,7 @@ bool ComprobarCedula(string cedula)
 {
     string info, cedula_c;
     int pos = 0;
-    info = DecodificarInfo("sudo.txt");
+    info = DecodificarInfo("sudo.dat");
     pos = info.find('\n');
     info = info.substr(pos+1);
     while(pos!= -1){
@@ -371,7 +408,7 @@ void EliminarUsuario()
         if(ComprobarSaldo0(cedula)){
             string info,info_final,usuario;
             int pos;
-            info = DecodificarInfo("sudo.txt");
+            info = DecodificarInfo("sudo.dat");
             pos = info.find('\n');
             info = info.substr(pos+1);
             while(pos!=-1){
@@ -399,7 +436,7 @@ bool ComprobarSaldo0(string cedula)
 {
     string info,usuario;
     int pos = 0;
-    info = DecodificarInfo("sudo.txt");
+    info = DecodificarInfo("sudo.dat");
     pos = info.find('\n');
     info = info.substr(pos+1);
     while(pos!=-1){
